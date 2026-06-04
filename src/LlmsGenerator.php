@@ -8,6 +8,7 @@ use LlmsGenerator\Discovery\SitemapDiscoverer;
 use LlmsGenerator\Dumper\FileDumper;
 use LlmsGenerator\Fetcher\FetcherInterface;
 use LlmsGenerator\Fetcher\HttpFetcher;
+use LlmsGenerator\Sanitizer\SanitizerInterface;
 use RuntimeException;
 
 class LlmsGenerator
@@ -16,6 +17,7 @@ class LlmsGenerator
     private FetcherInterface $fetcher;
     private ConverterInterface $converter;
     private FileDumper $dumper;
+    private ?SanitizerInterface $sanitizer;
 
     /** @var Page[] */
     private array $pages = [];
@@ -24,12 +26,14 @@ class LlmsGenerator
         Config $config,
         ?FetcherInterface $fetcher = null,
         ?ConverterInterface $converter = null,
-        ?FileDumper $dumper = null
+        ?FileDumper $dumper = null,
+        ?SanitizerInterface $sanitizer = null
     ) {
         $this->config = $config;
         $this->fetcher = $fetcher ?: new HttpFetcher(null, null, $config->getHttpTimeout());
         $this->converter = $converter ?: new HtmlToMarkdownConverter();
         $this->dumper = $dumper ?: new FileDumper($config->getOutputDir());
+        $this->sanitizer = $sanitizer;
     }
 
     public function addPage(string $url, array $options = []): self
@@ -58,17 +62,21 @@ class LlmsGenerator
 
         foreach ($this->pages as $page) {
             $fullUrl = $this->resolveUrl($page->getUrl());
-            $html = $this->fetcher->fetch($fullUrl);
+            $rawHtml = $this->fetcher->fetch($fullUrl);
 
             if ($page->getTitle() === null) {
-                $page->setTitle($this->extractTitle($html, $fullUrl));
+                $page->setTitle($this->extractTitle($rawHtml, $fullUrl));
             }
 
             if ($page->getSection() === null) {
                 $page->setSection($this->deriveSection($page->getUrl()));
             }
 
-            $markdown = $this->converter->convert($html);
+            if ($this->sanitizer !== null) {
+                $rawHtml = $this->sanitizer->sanitize($rawHtml);
+            }
+
+            $markdown = $this->converter->convert($rawHtml);
             $page->setContent($markdown);
         }
 
