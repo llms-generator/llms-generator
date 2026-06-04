@@ -1,0 +1,34 @@
+{
+    "name": "llms-generator/llms-generator",
+    "description": "PHP library to generate llms.txt and llms-full.txt files for any PHP project",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.4",
+        "league/html-to-markdown": "^5.1",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "php-http/discovery": "^1.19"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "php-http/mock-factory": "^1.0",
+        "guzzlehttp/psr7": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "LlmsGenerator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LlmsGenerator\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
