@@ -1,11 +1,32 @@
 # llms-generator
 
+[![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4)](https://php.net)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A PHP library to generate `llms.txt` and `llms-full.txt` files for any PHP project. Framework-agnostic — works with Laravel, Concrete CMS, WordPress, Symfony, and plain PHP sites.
 
 ## Install
 
+If published on Packagist:
+
 ```bash
 composer require llms-generator/llms-generator
+```
+
+Or install directly from GitHub:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/madnanshah/llms-generator"
+        }
+    ],
+    "require": {
+        "llms-generator/llms-generator": "dev-main"
+    }
+}
 ```
 
 ## Usage
@@ -119,6 +140,10 @@ $config = new Config([
 - PHP 7.4+
 - An HTTP client package (Guzzle, Symfony HttpClient, etc.) autodiscovered via `php-http/discovery`
 
+## Contributing
+
+Pull requests are welcome. Open an [issue](https://github.com/madnanshah/llms-generator/issues) first for significant changes.
+
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -26,7 +26,8 @@
         }
     },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "validate": "composer validate"
     },
     "config": {
         "sort-packages": true
