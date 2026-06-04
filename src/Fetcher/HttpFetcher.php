@@ -2,8 +2,8 @@
 
 namespace LlmsGenerator\Fetcher;
 
+use GuzzleHttp\Client as GuzzleClient;
 use Http\Discovery\Psr17FactoryDiscovery;
-use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
@@ -13,13 +13,18 @@ class HttpFetcher implements FetcherInterface
 {
     private ClientInterface $client;
     private RequestFactoryInterface $requestFactory;
-    private int $timeout;
 
     public function __construct(?ClientInterface $client = null, ?RequestFactoryInterface $requestFactory = null, int $timeout = 30)
     {
-        $this->client = $client ?: Psr18ClientDiscovery::find();
-        $this->requestFactory = $requestFactory ?: Psr17FactoryDiscovery::findRequestFactory();
-        $this->timeout = $timeout;
+        if ($client === null) {
+            $client = new GuzzleClient([
+                'timeout' => $timeout,
+                'connect_timeout' => $timeout,
+            ]);
+        }
+
+        $this->client = $client;
+        $this->requestFactory = $requestFactory ?? Psr17FactoryDiscovery::findRequestFactory();
     }
 
     public function fetch(string $url): string
