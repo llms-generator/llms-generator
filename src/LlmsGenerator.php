@@ -8,6 +8,7 @@ use LlmsGenerator\Discovery\SitemapDiscoverer;
 use LlmsGenerator\Dumper\FileDumper;
 use LlmsGenerator\Fetcher\FetcherInterface;
 use LlmsGenerator\Fetcher\HttpFetcher;
+use LlmsGenerator\Sanitizer\HtmlSanitizer;
 use LlmsGenerator\Sanitizer\SanitizerInterface;
 use RuntimeException;
 
@@ -17,7 +18,7 @@ class LlmsGenerator
     private FetcherInterface $fetcher;
     private ConverterInterface $converter;
     private FileDumper $dumper;
-    private ?SanitizerInterface $sanitizer;
+    private SanitizerInterface $sanitizer;
 
     /** @var Page[] */
     private array $pages = [];
@@ -33,7 +34,7 @@ class LlmsGenerator
         $this->fetcher = $fetcher ?: new HttpFetcher(null, null, $config->getHttpTimeout());
         $this->converter = $converter ?: new HtmlToMarkdownConverter();
         $this->dumper = $dumper ?: new FileDumper($config->getOutputDir());
-        $this->sanitizer = $sanitizer;
+        $this->sanitizer = $sanitizer ?? new HtmlSanitizer();
     }
 
     public function addPage(string $url, array $options = []): self
@@ -42,10 +43,10 @@ class LlmsGenerator
         return $this;
     }
 
-    public function discoverFromSitemap(?string $sitemapUrl = null): self
+    public function discoverFromSitemap(?string $sitemapUrl = null, int $maxPages = 0): self
     {
         $discoverer = new SitemapDiscoverer($this->fetcher);
-        $pages = $discoverer->discover($sitemapUrl ?: $this->config->getBaseUrl() . '/sitemap.xml');
+        $pages = $discoverer->discover($sitemapUrl ?: $this->config->getBaseUrl() . '/sitemap.xml', $maxPages);
 
         foreach ($pages as $page) {
             $this->pages[] = $page;
@@ -72,9 +73,7 @@ class LlmsGenerator
                 $page->setSection($this->deriveSection($page->getUrl()));
             }
 
-            if ($this->sanitizer !== null) {
-                $rawHtml = $this->sanitizer->sanitize($rawHtml);
-            }
+            $rawHtml = $this->sanitizer->sanitize($rawHtml);
 
             $markdown = $this->converter->convert($rawHtml);
             $page->setContent($markdown);
@@ -136,13 +135,21 @@ class LlmsGenerator
     {
         $parts = [];
 
+        $parts[] = '# ' . $this->config->getTitle();
+        if ($this->config->getDescription() !== '') {
+            $parts[] = '> ' . $this->config->getDescription();
+        }
+        if ($this->config->getDetails() !== '') {
+            $parts[] = $this->config->getDetails();
+        }
+
         foreach ($this->pages as $page) {
             $fullUrl = $this->resolveUrl($page->getUrl());
 
+            $parts[] = '---';
             $parts[] = '# ' . $page->getTitle();
-            $parts[] = 'Source: ' . $fullUrl;
-            $parts[] = '';
-            $parts[] = $page->getContent();
+            $parts[] = 'URL: ' . $fullUrl;
+            $parts[] = trim($page->getContent());
         }
 
         return implode("\n\n", $parts) . "\n";
@@ -172,7 +179,7 @@ class LlmsGenerator
     private function extractTitle(string $html, string $fallbackUrl): string
     {
         if (preg_match('/<title[^>]*>(.*?)<\/title>/si', $html, $matches)) {
-            $title = trim($matches[1]);
+            $title = trim(html_entity_decode($matches[1], ENT_QUOTES, 'UTF-8'));
             if ($title !== '') {
                 return $title;
             }

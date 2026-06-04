@@ -64,11 +64,12 @@ $result = $generator->generate();
 
 1. You register pages via `addPage()` or auto-discover from `sitemap.xml`
 2. `generate()` fetches each page's HTML via HTTP
-3. Missing titles are parsed from `<title>` tags
-4. Missing sections are derived from URL path prefixes (`/docs/*` → `Docs`)
-5. HTML is converted to clean Markdown
-6. `llms.txt` is written with the project index (H1, blockquote, sections with links)
-7. `llms-full.txt` is written with full page content inline
+3. HTML is sanitized: nav, footer, aside, script, style, hr, select, option, input, button, and svg elements are removed; images are replaced with their alt or title text
+4. Missing titles are parsed from `<title>` tags
+5. Missing sections are derived from URL path prefixes (`/docs/*` → `Docs`)
+6. Sanitized HTML is converted to clean Markdown (ATX headings, stripped unknown tags, collapsed blank lines)
+7. `llms.txt` is written with the project index (H1, blockquote, sections with links)
+8. `llms-full.txt` is written with full page content inline, separated by `---`
 
 ## Output examples
 
@@ -92,13 +93,23 @@ $result = $generator->generate();
 ### llms-full.txt
 
 ```markdown
-# Getting Started
-Source: https://example.com/docs/getting-started
+# My Project
+
+> A short description for the blockquote.
+
+---
+
+## Getting Started
+
+URL: https://example.com/docs/getting-started
 
 ...full markdown content...
 
-# API Reference
-Source: https://example.com/docs/api
+---
+
+## API Reference
+
+URL: https://example.com/docs/api
 
 ...full markdown content...
 ```
@@ -121,6 +132,18 @@ Fetches and parses `{base_url}/sitemap.xml` (or a custom URL) and registers all 
 
 Fetches all pages, converts to Markdown, writes both files. Returns `['llms.txt' => '/path', 'llms-full.txt' => '/path']`.
 
+The constructor accepts optional implementations for testing or customization:
+
+```php
+$generator = new LlmsGenerator(
+    $config,
+    $fetcher,      // FetcherInterface|null — HTTP fetcher (default: HttpFetcher)
+    $converter,    // ConverterInterface|null — HTML-to-markdown (default: HtmlToMarkdownConverter)
+    $sanitizer,    // SanitizerInterface|null — HTML sanitizer (default: HtmlSanitizer)
+    $dumper        // FileDumper|null — file writer (default: FileDumper)
+);
+```
+
 ## Config options
 
 ```php
@@ -138,7 +161,10 @@ $config = new Config([
 ## Requirements
 
 - PHP 7.4+
+- `ext-dom`*, `ext-simplexml`*, `ext-libxml`* — bundled with PHP
 - An HTTP client package (Guzzle, Symfony HttpClient, etc.) autodiscovered via `php-http/discovery`
+
+<sup>* These are required for DOM sanitization and sitemap parsing.</sup>
 
 ## Contributing
 

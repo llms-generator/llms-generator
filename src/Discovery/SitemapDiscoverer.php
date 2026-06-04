@@ -16,7 +16,7 @@ class SitemapDiscoverer
         $this->fetcher = $fetcher;
     }
 
-    public function discover(string $sitemapUrl): array
+    public function discover(string $sitemapUrl, int $maxPages = 0): array
     {
         $xmlContent = $this->fetcher->fetch($sitemapUrl);
 
@@ -38,6 +38,9 @@ class SitemapDiscoverer
                     continue;
                 }
                 $pages[] = new Page($loc);
+                if ($maxPages > 0 && count($pages) >= $maxPages) {
+                    break;
+                }
             }
         } elseif (isset($xml->sitemap)) {
             foreach ($xml->sitemap as $sitemapElement) {
@@ -45,8 +48,12 @@ class SitemapDiscoverer
                 if ($loc === '') {
                     continue;
                 }
-                $subPages = $this->discover($loc);
+                $remaining = $maxPages > 0 ? $maxPages - count($pages) : 0;
+                $subPages = $this->discover($loc, $remaining);
                 $pages = array_merge($pages, $subPages);
+                if ($maxPages > 0 && count($pages) >= $maxPages) {
+                    break;
+                }
             }
         }
 

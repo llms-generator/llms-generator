@@ -33,9 +33,9 @@ class LlmsGeneratorTest extends TestCase
         return new class implements ConverterInterface {
             public function convert(string $html): string
             {
-                if (str_contains($html, 'Content')) return 'Start content.';
-                if (str_contains($html, 'API docs')) return 'API content.';
                 if (str_contains($html, 'Blog content')) return 'Blog content.';
+                if (str_contains($html, 'API docs')) return 'API content.';
+                if (str_contains($html, 'Content')) return 'Start content.';
                 return 'Default content.';
             }
         };
@@ -77,7 +77,7 @@ class LlmsGeneratorTest extends TestCase
         $this->assertStringContainsString('How to start', $llmsTxt);
 
         $this->assertStringContainsString('# Getting Started', $llmsFull);
-        $this->assertStringContainsString('Source: https://example.com/docs/start', $llmsFull);
+        $this->assertStringContainsString('URL: https://example.com/docs/start', $llmsFull);
         $this->assertStringContainsString('Start content.', $llmsFull);
 
         unlink($result['llms.txt']);

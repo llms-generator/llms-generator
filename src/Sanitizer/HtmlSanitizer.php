@@ -8,9 +8,8 @@ use DOMXPath;
 class HtmlSanitizer implements SanitizerInterface
 {
     private const REMOVE_TAGS = [
-        'nav', 'header', 'aside', 'script', 'style', 'noscript',
-        'iframe', 'form', 'input', 'button', 'svg', 'video', 'audio',
-        'canvas', 'details', 'summary',
+        'nav', 'footer', 'aside', 'script', 'style', 'hr',
+        'select', 'option', 'input', 'button', 'svg',
     ];
 
     private const REMOVE_CLASSES = ['ad', 'advertisement'];
@@ -33,6 +32,7 @@ class HtmlSanitizer implements SanitizerInterface
         $this->removeElementsByTag($body, self::REMOVE_TAGS);
         $this->removeTablesWithSpan($xpath, $body);
         $this->removeElementsByClass($xpath, $body, self::REMOVE_CLASSES);
+        $this->replaceImagesWithAltText($body);
 
         $innerHtml = $this->getInnerHtml($body);
 
@@ -97,6 +97,29 @@ class HtmlSanitizer implements SanitizerInterface
 
         foreach ($toRemove as $node) {
             $node->parentNode->removeChild($node);
+        }
+    }
+
+    private function replaceImagesWithAltText(\DOMNode $parent): void
+    {
+        $images = $parent->getElementsByTagName('img');
+        $toReplace = [];
+
+        foreach ($images as $img) {
+            $toReplace[] = $img;
+        }
+
+        foreach ($toReplace as $img) {
+            $text = $img->getAttribute('alt');
+            if ($text === '') {
+                $text = $img->getAttribute('title');
+            }
+            if ($text === '') {
+                $img->parentNode->removeChild($img);
+            } else {
+                $textNode = $img->ownerDocument->createTextNode($text);
+                $img->parentNode->replaceChild($textNode, $img);
+            }
         }
     }
 
