@@ -124,7 +124,7 @@ URL: https://example.com/docs/api
 | `section` | auto | H2 section. Derived from URL prefix (`/docs/*` → `Docs`) if omitted |
 | `notes` | null | Description appended after the link in llms.txt |
 
-### `discoverFromSitemap(?string $sitemapUrl = null): self`
+### `discoverFromSitemap(?string $sitemapUrl = null, int $maxPages = 0): self`
 
 Fetches and parses `{base_url}/sitemap.xml` (or a custom URL) and registers all discovered pages.
 
@@ -139,8 +139,8 @@ $generator = new LlmsGenerator(
     $config,
     $fetcher,      // FetcherInterface|null — HTTP fetcher (default: HttpFetcher)
     $converter,    // ConverterInterface|null — HTML-to-markdown (default: HtmlToMarkdownConverter)
-    $sanitizer,    // SanitizerInterface|null — HTML sanitizer (default: HtmlSanitizer)
-    $dumper        // FileDumper|null — file writer (default: FileDumper)
+    $dumper,       // FileDumper|null — file writer (default: FileDumper)
+    $sanitizer     // SanitizerInterface|null — HTML sanitizer (default: HtmlSanitizer)
 );
 ```
 
