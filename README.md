@@ -20,7 +20,7 @@ Or install directly from GitHub:
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/madnanshah/llms-generator"
+            "url": "https://github.com/llms-generator/llms-generator"
         }
     ],
     "require": {
@@ -168,7 +168,7 @@ $config = new Config([
 
 ## Contributing
 
-Pull requests are welcome. Open an [issue](https://github.com/madnanshah/llms-generator/issues) first for significant changes.
+Pull requests are welcome. Open an [issue](https://github.com/llms-generator/llms-generator/issues) first for significant changes.
 
 ## License
 
